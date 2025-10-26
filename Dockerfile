@@ -4,6 +4,9 @@ FROM ollama/ollama
 # Install Node.js (so Express can run)
 RUN apt-get update && apt-get install -y nodejs npm
 
+# Pull a model for code generation (change to your favorite one)
+RUN ollama pull codellama:7b
+
 # Set working directory
 WORKDIR /app
 
@@ -16,7 +19,7 @@ RUN npm install express body-parser
 # Expose port (Render expects this)
 EXPOSE 11434
 
-# Override Ollama entrypoint so we can run Node directly
+# Override Ollama entrypoint so Node runs directly
 ENTRYPOINT []
 
 # Start the Express server
