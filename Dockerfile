@@ -1,26 +1,31 @@
-﻿# Base Ollama image
+﻿# Base Ollama image (includes Ollama runtime)
 FROM ollama/ollama
 
-# Install Node.js (so Express can run)
+# Install Node.js and npm for Express
 RUN apt-get update && apt-get install -y nodejs npm
-
-# Pull a model for code generation (change to your favorite one)
-RUN ollama pull codellama:7b
 
 # Set working directory
 WORKDIR /app
 
-# Copy Express wrapper and dependencies
+# Copy the Express server and dependencies
 COPY server.js package*.json ./
 
 # Install dependencies
-RUN npm install express body-parser
+RUN npm install
 
 # Expose port (Render expects this)
 EXPOSE 11434
 
-# Override Ollama entrypoint so Node runs directly
+# Override Ollama's default entrypoint
 ENTRYPOINT []
 
-# Start the Express server
-CMD ["node", "server.js"]
+# Start Ollama in background, ensure model exists, then run Express
+CMD bash -c "\
+  ollama serve & \
+  sleep 5 && \
+  if ! ollama list | grep -q 'codellama:7b'; then \
+    echo 'Pulling CodeLlama model...'; \
+    ollama pull codellama:7b; \
+  fi && \
+  echo 'Starting Express API...' && \
+  node server.js"
