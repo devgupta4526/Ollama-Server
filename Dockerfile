@@ -21,11 +21,17 @@ ENTRYPOINT []
 
 # Start Ollama in background, ensure model exists, then run Express
 CMD bash -c "\
+  echo '🚀 Starting Ollama...' && \
   ollama serve & \
-  sleep 5 && \
+  # Wait until Ollama is ready
+  until ollama list > /dev/null 2>&1; do \
+    echo '⏳ Waiting for Ollama to start...'; \
+    sleep 2; \
+  done && \
+  # Ensure model is available
   if ! ollama list | grep -q 'codellama:7b'; then \
-    echo 'Pulling CodeLlama model...'; \
+    echo '📦 Pulling CodeLlama model...'; \
     ollama pull codellama:7b; \
   fi && \
-  echo 'Starting Express API...' && \
+  echo '✅ Starting Express API...' && \
   node server.js"
